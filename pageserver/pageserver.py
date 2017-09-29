@@ -18,8 +18,9 @@ import logging   # Better than print statements
 logging.basicConfig(format='%(levelname)s:%(message)s',
                     level=logging.INFO)
 log = logging.getLogger(__name__)
-# Logging level may be overridden by configuration 
+# Logging level may be overridden by configuration
 
+import os
 import socket    # Basic TCP/IP communication on the internet
 import _thread   # Response computation runs concurrently with main program
 
@@ -92,7 +93,15 @@ def respond(sock):
     parts = request.split()
     if len(parts) > 1 and parts[0] == "GET":
         transmit(STATUS_OK, sock)
-        transmit(CAT, sock)
+
+        """ Take second string from parts list, getting the suffix of the requested url
+        then converting that to a file name to open, read, and finally transmitting """
+        string_to_transmit = ""
+        with open(os.path.join(DOCROOT, parts[1][1:])) as f:
+            for line in f:
+                string_to_transmit += line
+
+        transmit(string_to_transmit, sock)
     else:
         log.info("Unhandled request: {}".format(request))
         transmit(STATUS_NOT_IMPLEMENTED, sock)
@@ -137,6 +146,11 @@ def get_options():
 
 def main():
     options = get_options()
+
+    global DOCROOT
+    assert options.DOCROOT
+    DOCROOT = options.DOCROOT
+
     port = options.PORT
     if options.DEBUG:
         log.setLevel(logging.DEBUG)
