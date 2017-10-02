@@ -97,11 +97,28 @@ def respond(sock):
         """ Take second string from parts list, getting the suffix of the requested url
         then converting that to a file name to open, read, and finally transmitting """
         string_to_transmit = ""
-        with open(os.path.join(DOCROOT, parts[1][1:])) as f:
-            for line in f:
-                string_to_transmit += line
+        file_to_read = parts[1][1:]
+        log.info(">>>>>>>>>> " + file_to_read[-3:] + "  <>  " + file_to_read[-4:])
+        if "//" in file_to_read or "~" in file_to_read or ".." in file_to_read:
+            transmit(STATUS_FORBIDDEN, sock)
+            log.info(">>>>>> - CONTAINS WRONG SYMBOL")
+        else:
+            if file_to_read[-4:] == "html" or file_to_read[-3:] == "css":
+                try:
+                    log.info(">>>>>> - EVERYTHINGS GOOD")
+                    with open(os.path.join(DOCROOT, file_to_read)) as f:
+                        for line in f:
+                            string_to_transmit += line
 
-        transmit(string_to_transmit, sock)
+                    transmit(string_to_transmit, sock)
+                except FileNotFoundError:
+                    log.info(">>>>>> - FILE NOT FOUND")
+                    transmit(STATUS_NOT_FOUND, sock)
+            else:
+                log.info(">>>>>> - WRONG SUFFIX")
+                transmit(STATUS_FORBIDDEN, sock)
+
+
     else:
         log.info("Unhandled request: {}".format(request))
         transmit(STATUS_NOT_IMPLEMENTED, sock)
