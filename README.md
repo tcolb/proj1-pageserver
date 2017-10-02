@@ -1,1 +1,1 @@
-## Author: Tristan Colby, tcolby@uoregon.edu ##
+## Author: Tristan Colby, tcolby@cs.uoregon.edu ##
