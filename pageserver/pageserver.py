@@ -6,11 +6,7 @@
   error handling and many other things to keep the illustration as simple
   as possible.
 
-  FIXME:
-  Currently this program always serves an ascii graphic of a cat.
-  Change it to serve files if they end with .html or .css, and are
-  located in ./pages  (where '.' is the directory from which this
-  program is run).
+  Author: Tristan Colby, Michal Young (bulk of code)
 """
 
 import os
@@ -94,30 +90,30 @@ def respond(sock):
     if len(parts) > 1 and parts[0] == "GET":
         transmit(STATUS_OK, sock)
 
-        """ Take second string from parts list, getting the suffix of the requested url
-        then converting that to a file name to open, read, and finally transmitting """
+        """ The second string from the parts list is used to get the name of the requested file,
+         then that file is opened, read, and put into a string. Finally, transmit() is called with
+         the string as a parameter, as well as the socket"""
         string_to_transmit = ""
-        file_to_read = parts[1][1:]
-        log.info(">>>>>>>>>> " + file_to_read[-3:] + "  <>  " + file_to_read[-4:])
-        if "//" in file_to_read or "~" in file_to_read or ".." in file_to_read:
+        unacceptable_symbols = ["//", "~", ".."]
+        file_to_read = parts[1]
+
+        # Credit to Lauritz V. Thaulow for this conditional check
+        # https://stackoverflow.com/questions/6531482/how-to-check-if-a-string-contains-an-element-from-a-list-in-python
+        if any(sym in file_to_read for sym in unacceptable_symbols):
+            # Transmits 403 error if "//", "~", or ".." is in the url
             transmit(STATUS_FORBIDDEN, sock)
-            log.info(">>>>>> - CONTAINS WRONG SYMBOL")
         else:
             if file_to_read[-4:] == "html" or file_to_read[-3:] == "css":
                 try:
-                    log.info(">>>>>> - EVERYTHINGS GOOD")
-                    with open(os.path.join(DOCROOT, file_to_read)) as f:
+                    # Has correct file path formatting, therefore will attempt to create string and transmit
+                    with open(os.path.join(DOCROOT, file_to_read[1:])) as f:
                         for line in f:
                             string_to_transmit += line
-
                     transmit(string_to_transmit, sock)
-                except FileNotFoundError:
-                    log.info(">>>>>> - FILE NOT FOUND")
+                except FileNotFoundError:    # Transmits 404 error if file does not exist
                     transmit(STATUS_NOT_FOUND, sock)
-            else:
-                log.info(">>>>>> - WRONG SUFFIX")
+            else:    # Transmits 403 error if the file path does not point to an html or css file
                 transmit(STATUS_FORBIDDEN, sock)
-
 
     else:
         log.info("Unhandled request: {}".format(request))
