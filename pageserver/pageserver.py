@@ -103,7 +103,7 @@ def respond(sock):
             # Transmits 403 error if "//", "~", or ".." is in the url
             transmit(STATUS_FORBIDDEN, sock)
         else:
-            if file_to_read[-4:] == "html" or file_to_read[-3:] == "css":
+            if file_to_read[-5:] == ".html" or file_to_read[-4:] == ".css":
                 try:
                     # Has correct file path formatting, therefore will attempt to create string and transmit
                     with open(os.path.join(DOCROOT, file_to_read[1:])) as f:
